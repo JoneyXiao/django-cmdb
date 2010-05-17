@@ -1,7 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import Group, User
 from django.utils.http import urlquote
-import settings
+import logging
+
 
 class Schema(models.Model):
 
@@ -15,15 +16,15 @@ class Schema(models.Model):
     edit_form_name = models.CharField('Edit Form Name', max_length=1024, blank=True)
 
     def __unicode__(self):
-                return u'''%s''' % self.path
+        return u'''%s''' % self.path
                                 
 class ConfigurationItem(models.Model):
 
     path = models.CharField('Path', max_length=1024)
-    name = models.CharField('Name', max_length=1024)
+    name = models.CharField('Name', max_length=1024, blank=True)
     description = models.CharField('Description', max_length=1024, blank=True)
     active = models.BooleanField('Active', default=True)
-    is_leaf = models.BooleanField('Is a Leaf item', default=False)
+    is_leaf = models.BooleanField('Is a Leaf item', default=True)
     date_created = models.DateTimeField('Date Created', auto_now_add=True)
     date_modified = models.DateTimeField('Date Modified', auto_now=True)
     extension_attribute_1 = models.CharField('Extension Attribute 1', max_length=255, blank=True)
@@ -42,10 +43,77 @@ class ConfigurationItem(models.Model):
         return u'''%s''' % self.path
 
     def get_absolute_url(self):
-        return self.path
+        return u'''%s''' % urlquote(self.path)
         
     class Meta:
-            ordering = ["path"]
+        ordering = ["path"]
+
+    def save(self, *args, **kwargs):
+        changer_name = False
+        if kwargs.has_key('request'):   # Try and get the person changing the
+                                        # object from the HTTP request
+            try:
+                changer_name = kwargs['request'] = request.user
+            except:
+                pass
+
+        if not changer_name:
+            try:    # If no request.user exists (because of admin interface
+                    # we are using python commands use a dummy SYSTEM user
+                changer_name = User.objects.get(username='SYSTEM')
+            except:
+                # TODO: Shouldn't use a example.com email address here...
+                c = User.objects.create_user('SYSTEM', 'system@example.com',
+                        'xxxxx')
+                c.set_unusable_password()
+                changer_name = c
+
+        if self.pk: # We are updating an existing object
+            change_type = 1 # see cmdb.models.HistoryLog.LOG_UPDATE_TYPES
+            change = 'CI Created'
+            # Inspect the existing object and see which fields have changed.
+            # Search the schema definitions to see which type of object we are
+            # looking at
+            for part in get_parent_paths(self.path):
+                try:
+                    s = Schema.objects.get(path=part)
+                    break
+                except:
+                    s = None
+            if s:
+                current_object = eval('''%s.objects.get(id=%s)''' % (
+                    s.class_name, self.pk))
+
+                changed_attributes = {}
+                fields = [ f.name for f in current_object._meta.fields ]
+                for f in fields:
+                    if eval('''self.%s''' % f) != eval('''current_object.%s''' % f):
+                        HistoryLog(configuration_item=self, user=changer_name, 
+                         change_type=change_type,
+                         info='''Attribute "%s" changed from "%s" to "%s"''' 
+                         % ( f, eval('''current_object.%s''' % f), 
+                         eval('''self.%s''' % f) )).save()
+                        # TODO: Notify the users that subscribe to this device about the
+                         # change
+                        super(ConfigurationItem, self).save(*args, **kwargs)
+                        return
+                    
+        else:
+            change_type = 0
+            HistoryLog(configuration_item=self, user=changer_name, change_type=change_type,
+                info='CI Created').save()
+        super(ConfigurationItem, self).save(*args, **kwargs)
+        return
+
+class Company(ConfigurationItem):
+
+    address = models.CharField(max_length=1024, blank=True)
+    phoneNumber = models.CharField(max_length=255, blank=True)
+    url = models.URLField(blank=True)
+    read_acl = models.ManyToManyField(Group, related_name='company_readACL', blank=True, default=None)
+    write_acl = models.ManyToManyField(Group, related_name='company_writeACL', blank=True, default=None)
+    alert_group = models.EmailField(blank=True)
+
 
 class Device(ConfigurationItem):
 
@@ -65,7 +133,7 @@ class Device(ConfigurationItem):
     model = models.ForeignKey(ConfigurationItem, verbose_name='Model',
             related_name="devices_of_type")
     machine_type = models.CharField('Machine Type', max_length=255, blank=True)
-    company = models.ForeignKey(ConfigurationItem, verbose_name='Company',
+    company = models.ForeignKey(Company, verbose_name='Company',
             related_name="devices_in_company")
     ip_addresses = models.CharField('IP Address', max_length=1024, blank=True)
     purchase_date = models.DateField('Purchase Date', blank=True, null=True)
@@ -77,9 +145,9 @@ class Device(ConfigurationItem):
     notify_group = models.TextField('Notify Group', blank=True)
     deployment_status = models.CharField('Deployment Status', max_length=255, blank=True, choices=DEPLOYMENT_STATUS)
     sku_number = models.TextField('SKU Number', max_length=255, blank=True)
-    purchase_price = models.FloatField(blank=True)
-    depreciation_period = models.IntegerField(blank=True)
-    depreciation_start_date = models.DateField(blank=True)
+    purchase_price = models.FloatField(blank=True, null=True)
+    depreciation_period = models.IntegerField(blank=True, null=True)
+    depreciation_start_date = models.DateField(blank=True, null=True)
     invoice_number = models.TextField(max_length=255, blank=True)
 
 
@@ -124,7 +192,7 @@ class People(ConfigurationItem):
     job_title = models.CharField(max_length=1024, blank=True)
     telephone_number = models.CharField(max_length=1024, blank=True)
     extension_number = models.CharField(max_length=1024, blank=True)
-    company = models.ForeignKey(ConfigurationItem, related_name='personCompany', blank=True, null=True)
+    company = models.ForeignKey(Company, related_name='personCompany', blank=True, null=True)
     last_updated = models.DateTimeField(auto_now=True)
     created_date = models.DateTimeField(auto_now_add=True)
     object_sid = models.CharField(max_length=1024)
@@ -135,21 +203,12 @@ class Computer(Device):
     assigned_devices = models.ManyToManyField(Device, related_name='computerDevices', blank=True)
     mac_address = models.CharField('MAC Address', max_length=32, blank=True)
 
-class Company(ConfigurationItem):
-
-    address = models.CharField(max_length=1024, blank=True)
-    phoneNumber = models.CharField(max_length=255, blank=True)
-    url = models.URLField(blank=True)
-    read_acl = models.ManyToManyField(Group, related_name='company_readACL', blank=True, default=None)
-    write_acl = models.ManyToManyField(Group, related_name='company_writeACL', blank=True, default=None)
-    alert_group = models.EmailField(blank=True)
-
 class System(ConfigurationItem):
 
     device_list = models.ManyToManyField(ConfigurationItem, related_name='systemDevices', blank=True)
     alert_group = models.TextField('Alert Group', blank=True)
     notify_group = models.TextField('Notify Group', blank=True)
-    company = models.ForeignKey(ConfigurationItem, related_name='systemCompany')
+    company = models.ForeignKey(Company, related_name='systemCompany')
     url = models.URLField(blank=True)
     dynamic_query = models.CharField('Dynamic Query String', max_length=1024, blank=True)
                 
@@ -183,16 +242,19 @@ class IPNetwork(ConfigurationItem):
 class HistoryLog(models.Model):       
 
     LOG_UPDATE_TYPES = (
-        ('CI Creation', 'CI Creation'),
-        ('CI Modification', 'CI Modification'),
-        ('CI Decommission', 'CI Decommission'),
+        (0, 'CI Creation'),
+        (1, 'CI Modification'),
+        (2, 'CI Decommission'),
     )
 
     date = models.DateTimeField(auto_now_add=True)
-    device = models.ForeignKey(ConfigurationItem, related_name='deviceLog')
-    user = models.CharField(max_length=1024)
+    configuration_item = models.ForeignKey(ConfigurationItem, related_name='deviceLog')
+    user = models.ForeignKey(User)
     change_type = models.CharField(max_length=1024, choices=LOG_UPDATE_TYPES)
     info = models.CharField(max_length=1024)
+
+    def __unicode__(self):
+        return u'''%s - %s''' % ( self.configuration_item.path, self.info )
 
 class AlertProfile(models.Model):
 
@@ -206,3 +268,20 @@ class AlertProfile(models.Model):
         
     def __str__(self):
         return '''%s Alert Profile''' % self.user.username
+
+def get_parent_paths(path):
+    split_path = path.split('/')
+    split_path.remove('') # Remove the empty item that is left as the first item in the list
+    paths = [] # Create an empty list to hold the paths
+    while len(split_path) > 0:
+        # For each item in the CIs path
+        new_path = '' # Create an empty string to hold this path
+        for part in split_path:
+            new_path = '''%s/%s''' % ( new_path, part)       # Generate the path
+        paths.append(new_path) # Append this path to the list
+        part_to_delete = split_path[-1]
+        # As we iterate through the path we need to delete the last part of
+        # the path.. find it now
+        split_path.remove(part_to_delete)
+        # Delete the part and do it all again....
+    return paths
