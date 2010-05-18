@@ -4,6 +4,8 @@ from django.contrib.auth.models import Group, User
 from django.utils.http import urlquote
 import logging
 
+from misc.cmdb_lib import get_options_for_combo, get_parent_paths
+
 
 class Schema(models.Model):
 
@@ -85,7 +87,7 @@ class ConfigurationItem(models.Model):
         if not s:
             logging.debug("No schema found for this device.")
             raise IncorrectPath, u'''No schema found for this device.'''
-        logging.debug('''According to the path the class should be: %s''' % s.path)
+        logging.debug('''According to the path the class should be: %s''' % s.class_name)
         # Ensure that self.path is correct for this Model
         logging.debug('''self.class = %s''' % self.__class__)
         logging.debug('''object.class = %s''' % self.__class__)
@@ -166,12 +168,15 @@ class Device(ConfigurationItem):
     asset_tag = models.CharField('Asset Tag', max_length=255, blank=True)
     serial_number = models.CharField('Serial Number', max_length=255, blank=True)
     location = models.ForeignKey(Location, verbose_name='Location',
-            related_name="devices_in_location")
+            related_name="devices_in_location",
+            choices=get_options_for_combo('/Locations'))
     model = models.ForeignKey(Model, verbose_name='Model',
-            related_name="devices_of_type")
+            related_name="devices_of_type",
+            choices=get_options_for_combo('/HardwareVendor'))
     machine_type = models.CharField('Machine Type', max_length=255, blank=True)
     company = models.ForeignKey(Company, verbose_name='Company',
-            related_name="devices_in_company")
+            related_name="devices_in_company",
+            choices=get_options_for_combo('/Company'))
     ip_addresses = models.CharField('IP Address', max_length=1024, blank=True)
     purchase_date = models.DateField('Purchase Date', blank=True, null=True)
     warranty_expire = models.DateField('Warranty Expire', blank=True, null=True)
@@ -201,15 +206,21 @@ class OperatingSystem(ConfigurationItem):
 
 class Server(Device):
 
-    operating_system = models.ForeignKey(OperatingSystem, verbose_name='Operating System')
+    operating_system = models.ForeignKey(OperatingSystem,
+            verbose_name='Operating System',
+            choices=get_options_for_combo('/OperatingSystem'))
     authentication_source = models.ForeignKey(ConfigurationItem,
             verbose_name='Authentication Source',
-            related_name='servers_in_authentication_source')
+            related_name='servers_in_authentication_source',
+            choices=get_options_for_combo('/AuthenticationSource'))
     patching_system = models.ForeignKey(ConfigurationItem,
             verbose_name='Patching System',
-            related_name='servers_in_patching_system')
+            related_name='servers_in_patching_system',
+            choices=get_options_for_combo('/PatchingSystem'))
     backup_system = models.ForeignKey(ConfigurationItem, 
-            verbose_name='Backup System', related_name='servers_in_backup_system')
+            verbose_name='Backup System',
+            related_name='servers_in_backup_system',
+            choices=get_options_for_combo('/BackupSystem'))
 
 class People(ConfigurationItem):
 
@@ -297,26 +308,4 @@ class AlertProfile(models.Model):
     def __str__(self):
         return '''%s Alert Profile''' % self.user.username
 
-def get_parent_paths(path):
-    split_path = path.split('/')
-    try:
-        split_path.remove('') # Remove the empty item that is left as the first item in the list
-    except ValueError:
-        # Someone has entered a path with no / in it... 
-        raise ValidationError(u'Invalid Path')
-    paths = [] # Create an empty list to hold the paths
-    while len(split_path) > 0:
-        # For each item in the CIs path
-        new_path = '' # Create an empty string to hold this path
-        for part in split_path:
-            new_path = '''%s/%s''' % ( new_path, part)       # Generate the path
-        paths.append(new_path) # Append this path to the list
-        part_to_delete = split_path[-1]
-        # As we iterate through the path we need to delete the last part of
-        # the path.. find it now
-        split_path.remove(part_to_delete)
-        # Delete the part and do it all again....
-    # Insert a single slash at the beginning of the list
-    paths.append('/')
-    return paths
 

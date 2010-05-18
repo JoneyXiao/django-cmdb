@@ -30,35 +30,93 @@ Schema(path='/Devices/Servers', module_name='cmdb', class_name='Server',
     edit_form_name='ServerEditForm').save()
 logging.debug('Loaded schema for /Devices/Servers')
 
+Schema(path='/Company', module_name='cmdb', class_name='Company',
+    edit_template='cmdb/company-edit.html', view_template='cmdb/company-view.html',
+    add_template='cmdb/company-add.html', form_name='CompanyForm',
+    edit_form_name='CompanyEditForm').save()
+logging.debug('Loaded schema for /Company')
+
+Schema(path='/HardwareVendor', module_name='cmdb', class_name='Model',
+    edit_template='cmdb/model-edit.html', view_template='cmdb/model-view.html',
+    add_template='cmdb/model-add.html', form_name='HWModelForm',
+    edit_form_name='HWModelEditForm').save()
+logging.debug('Loaded schema for /HardwareVendor')
+
+Schema(path='/Locations', module_name='cmdb', class_name='Location',
+    edit_template='cmdb/location-edit.html', view_template='cmdb/location-view.html',
+    add_template='cmdb/location-add.html', form_name='LocationForm',
+    edit_form_name='LocationEditForm').save()
+logging.debug('Loaded schema for /Locations')
+
+Schema(path='/OperatingSystem', module_name='cmdb', class_name='OperatingSystem',
+    edit_template='cmdb/os-edit.html', view_template='cmdb/os-view.html',
+    add_template='cmdb/os-add.html', form_name='OSForm',
+    edit_form_name='OSEditForm').save()
+logging.debug('Loaded schema for /OperatingSystem')
+
+
 logging.debug('**** Loaded Initial Schema')
 
 logging.debug('**** Creating tree objects')
 ConfigurationItem(path='/').save()
 logging.debug('Created /')
 
-ConfigurationItem(path='/Company/').save()
+company = Company(path='/Company')
+company.save()
 logging.debug('Created /Company')
 
 acme = Company(path='/Company/ACME Corp')
 acme.save()
 logging.debug('Created /Company/ACME Corp')
 
-ConfigurationItem(path='/HardwareVendor').save()
+model = Model(path='/HardwareVendor')
+model.save()
 logging.debug('Created /HardwareVendor')
 
 hp = Model(path='/HardwareVendor/HP')
 hp.save()
 logging.debug('Created /HardwareVendor/HP')
 
-ConfigurationItem(path='/Locations').save()
+location = Location(path='/Locations')
+location.save()
 logging.debug('Created /Locations')
 
 london = Location(path='/Locations/London')
 london.save()
 logging.debug('Created /Locations/London')
 
-ConfigurationItem(path='/Devices').save()
+Device(path='/Devices', location=location, model=model, company=company).save()
 logging.debug('Created /Devices')
 
 Device(path='/Devices/ROUTER01', company=acme, model=hp, location=london).save()
 logging.debug('Created /Devices/ROUTER01')
+
+OperatingSystem(path='/OperatingSystem').save()
+logging.debug('Created /OperatingSystem')
+
+linux = OperatingSystem(path='/OperatingSystem/Linux')
+linux.save()
+logging.debug('Created /OperatingSystem/Linux')
+
+ConfigurationItem(path='/PatchingSystem').save()
+logging.debug('Created /PatchingSystem')
+
+patching_system = ConfigurationItem(path='/PatchingSystem/Default Patching System')
+patching_system.save()
+logging.debug('Created /PatchingSystem/Default Patching System')
+
+ConfigurationItem(path='/AuthenticationSource').save()
+logging.debug('Created /AuthenticationSource')
+
+auth = ConfigurationItem(path='/AuthenticationSource/Default Authentication System')
+auth.save()
+logging.debug('Created /AuthenticationSource/Default Authentication Source')
+
+
+ConfigurationItem(path='/BackupSystem').save()
+logging.debug('Created /BackupSystem')
+
+backup = ConfigurationItem(path='/BackupSystem/Default Backup System')
+backup.save()
+logging.debug('Created /BackupSystem/Default Backup System')
+
