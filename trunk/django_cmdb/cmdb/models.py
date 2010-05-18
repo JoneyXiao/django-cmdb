@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 from django.contrib.auth.models import Group, User
 from django.utils.http import urlquote
 import logging
@@ -9,9 +10,9 @@ class Schema(models.Model):
     path = models.CharField('Path', max_length=255, blank=True, unique=True)
     module_name = models.CharField('Module Name', max_length=1024, blank=True)
     class_name = models.CharField('Class', max_length=1024, blank=True)
-    edit_form = models.CharField('Edit Form', max_length=1024, blank=True)
-    view_form = models.CharField('View Form', max_length=1024, blank=True)
-    add_form = models.CharField('Add Form', max_length=1024,  blank=True)
+    edit_template = models.CharField('Edit Template', max_length=1024, blank=True)
+    view_template = models.CharField('View Template', max_length=1024, blank=True)
+    add_template = models.CharField('Add Template', max_length=1024,  blank=True)
     form_name = models.CharField('Form Name', max_length=1024, blank=True)
     edit_form_name = models.CharField('Edit Form Name', max_length=1024, blank=True)
 
@@ -49,11 +50,14 @@ class ConfigurationItem(models.Model):
         ordering = ["path"]
 
     def save(self, *args, **kwargs):
+        logging.debug("Start save function for object %s" % self.path)
         changer_name = False
         if kwargs.has_key('request'):   # Try and get the person changing the
                                         # object from the HTTP request
             try:
                 changer_name = kwargs['request'] = request.user
+                logging.debug("Identified user changing as %s from HTTP \
+                        request" % changer_name)
             except:
                 pass
 
@@ -67,43 +71,64 @@ class ConfigurationItem(models.Model):
                         'xxxxx')
                 c.set_unusable_password()
                 changer_name = c
+            logging.debug("User updating object is %s" % changer_name)
 
-        if self.pk: # We are updating an existing object
+        # Look at the __class__ of the object we are saving and confirm the
+        # path in use is correct, else raise ValidationError
+        for part in get_parent_paths(self.path):
+            try:
+                s = Schema.objects.get(path=part)
+                logging.debug("Using schema %s" % s.path)
+                break
+            except:
+                s = None
+        if not s:
+            logging.debug("No schema found for this device.")
+            raise IncorrectPath, u'''No schema found for this device.'''
+        logging.debug('''According to the path the class should be: %s''' % s.path)
+        # Ensure that self.path is correct for this Model
+        logging.debug('''self.class = %s''' % self.__class__)
+        logging.debug('''object.class = %s''' % self.__class__)
+        if self.__class__ != eval('''%s().__class__''' % s.class_name):
+            raise ValidationError(u'''Incorrect path for this type of object''')
+        logging.debug("Using schema %s" % s.path)
+
+        if self.pk:
+            logging.debug("Object has primary key (%s) and is ready for editing"
+                    % self.pk)
             change_type = 1 # see cmdb.models.HistoryLog.LOG_UPDATE_TYPES
             change = 'CI Created'
-            # Inspect the existing object and see which fields have changed.
-            # Search the schema definitions to see which type of object we are
-            # looking at
-            for part in get_parent_paths(self.path):
-                try:
-                    s = Schema.objects.get(path=part)
-                    break
-                except:
-                    s = None
             if s:
-                current_object = eval('''%s.objects.get(id=%s)''' % (
-                    s.class_name, self.pk))
+                
+                # Ensure the objects 
+                current_object = eval('''%s.objects.get(id=%s)''' % ( s.class_name, self.pk))
 
                 changed_attributes = {}
+                # Inspect the existing object and see which fields have changed.
                 fields = [ f.name for f in current_object._meta.fields ]
                 for f in fields:
                     if eval('''self.%s''' % f) != eval('''current_object.%s''' % f):
+                        info='''Attribute "%s" changed from "%s" to "%s"''' \
+                         % ( f, eval('''current_object.%s''' % f), 
+                         eval('''self.%s''' % f) )
                         HistoryLog(configuration_item=self, user=changer_name, 
                          change_type=change_type,
-                         info='''Attribute "%s" changed from "%s" to "%s"''' 
-                         % ( f, eval('''current_object.%s''' % f), 
-                         eval('''self.%s''' % f) )).save()
-                        # TODO: Notify the users that subscribe to this device about the
-                         # change
+                         info=info).save()
+                        logging.debug(info)
+                        # TODO: Notify the users that subscribe to this device
                         super(ConfigurationItem, self).save(*args, **kwargs)
                         return
+            else:
+                logging.debug("CRITICAL: No schema found for object")
                     
         else:
             change_type = 0
+            logging.debug("This is a new object to add to database")
+            super(ConfigurationItem, self).save(*args, **kwargs)
             HistoryLog(configuration_item=self, user=changer_name, change_type=change_type,
                 info='CI Created').save()
-        super(ConfigurationItem, self).save(*args, **kwargs)
-        return
+            return
+        logging.debug("Finished saving object")
 
 class Company(ConfigurationItem):
 
@@ -114,6 +139,18 @@ class Company(ConfigurationItem):
     write_acl = models.ManyToManyField(Group, related_name='company_writeACL', blank=True, default=None)
     alert_group = models.EmailField(blank=True)
 
+class Location(ConfigurationItem):
+
+    address = models.CharField(max_length=1024, blank=True)
+    phoneNumber = models.CharField(max_length=255, blank=True)
+    url = models.URLField(blank=True)
+    read_acl = models.ManyToManyField(Group, related_name='location_readACL', blank=True, default=None)
+    write_acl = models.ManyToManyField(Group, related_name='location_writeACL', blank=True, default=None)
+    alert_group= models.EmailField(blank=True)
+
+class Model(ConfigurationItem):
+
+    height = models.IntegerField('Height in U', null=True)
 
 class Device(ConfigurationItem):
 
@@ -128,9 +165,9 @@ class Device(ConfigurationItem):
 
     asset_tag = models.CharField('Asset Tag', max_length=255, blank=True)
     serial_number = models.CharField('Serial Number', max_length=255, blank=True)
-    location = models.ForeignKey(ConfigurationItem, verbose_name='Location',
+    location = models.ForeignKey(Location, verbose_name='Location',
             related_name="devices_in_location")
-    model = models.ForeignKey(ConfigurationItem, verbose_name='Model',
+    model = models.ForeignKey(Model, verbose_name='Model',
             related_name="devices_of_type")
     machine_type = models.CharField('Machine Type', max_length=255, blank=True)
     company = models.ForeignKey(Company, verbose_name='Company',
@@ -173,15 +210,6 @@ class Server(Device):
             related_name='servers_in_patching_system')
     backup_system = models.ForeignKey(ConfigurationItem, 
             verbose_name='Backup System', related_name='servers_in_backup_system')
-
-class Location(ConfigurationItem):
-
-    address = models.CharField(max_length=1024, blank=True)
-    phoneNumber = models.CharField(max_length=255, blank=True)
-    url = models.URLField(blank=True)
-    read_acl = models.ManyToManyField(Group, related_name='location_readACL', blank=True, default=None)
-    write_acl = models.ManyToManyField(Group, related_name='location_writeACL', blank=True, default=None)
-    alert_group= models.EmailField(blank=True)
 
 class People(ConfigurationItem):
 
@@ -271,7 +299,11 @@ class AlertProfile(models.Model):
 
 def get_parent_paths(path):
     split_path = path.split('/')
-    split_path.remove('') # Remove the empty item that is left as the first item in the list
+    try:
+        split_path.remove('') # Remove the empty item that is left as the first item in the list
+    except ValueError:
+        # Someone has entered a path with no / in it... 
+        raise ValidationError(u'Invalid Path')
     paths = [] # Create an empty list to hold the paths
     while len(split_path) > 0:
         # For each item in the CIs path
@@ -284,4 +316,7 @@ def get_parent_paths(path):
         # the path.. find it now
         split_path.remove(part_to_delete)
         # Delete the part and do it all again....
+    # Insert a single slash at the beginning of the list
+    paths.append('/')
     return paths
+
