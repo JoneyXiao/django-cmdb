@@ -168,15 +168,12 @@ class Device(ConfigurationItem):
     asset_tag = models.CharField('Asset Tag', max_length=255, blank=True)
     serial_number = models.CharField('Serial Number', max_length=255, blank=True)
     location = models.ForeignKey(Location, verbose_name='Location',
-            related_name="devices_in_location",
-            choices=get_options_for_combo('/Locations'))
+            related_name="devices_in_location")
     model = models.ForeignKey(Model, verbose_name='Model',
-            related_name="devices_of_type",
-            choices=get_options_for_combo('/HardwareVendor'))
+            related_name="devices_of_type")
     machine_type = models.CharField('Machine Type', max_length=255, blank=True)
     company = models.ForeignKey(Company, verbose_name='Company',
-            related_name="devices_in_company",
-            choices=get_options_for_combo('/Company'))
+            related_name="devices_in_company")
     ip_addresses = models.CharField('IP Address', max_length=1024, blank=True)
     purchase_date = models.DateField('Purchase Date', blank=True, null=True)
     warranty_expire = models.DateField('Warranty Expire', blank=True, null=True)
@@ -186,11 +183,11 @@ class Device(ConfigurationItem):
     alert_group = models.TextField('Alert Group', blank=True)
     notify_group = models.TextField('Notify Group', blank=True)
     deployment_status = models.CharField('Deployment Status', max_length=255, blank=True, choices=DEPLOYMENT_STATUS)
-    sku_number = models.TextField('SKU Number', max_length=255, blank=True)
+    sku_number = models.CharField('SKU Number', max_length=255, blank=True)
     purchase_price = models.FloatField(blank=True, null=True)
     depreciation_period = models.IntegerField(blank=True, null=True)
     depreciation_start_date = models.DateField(blank=True, null=True)
-    invoice_number = models.TextField(max_length=255, blank=True)
+    invoice_number = models.CharField(max_length=255, blank=True)
 
 
 
