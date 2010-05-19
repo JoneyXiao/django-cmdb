@@ -1,18 +1,26 @@
 from cmdb.models import *
+from cmdb.views import decommission_ci
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
 
+def admin_decommission_ci(modeladmin, request, queryset):
+    for q in queryset:
+        decommission_ci(request, ci=q)
+admin_decommission_ci.short_description = 'Decommission CI'
+
 class ConfigurationItemAdmin(admin.ModelAdmin):
     list_display = ['path', 'name', 'active', 'description']
     search_fields = ['path']
+    actions = [admin_decommission_ci]
 
 class DeviceAdmin(admin.ModelAdmin):
     list_display = ['path', 'company', 'active', 'description']
-    search_fields = ['path', 'serialNumber', 'assetTag']
+    search_fields = ['path', 'serial_number', 'asset_tag']
+    actions = [admin_decommission_ci]
 	
 class ServerAdmin(admin.ModelAdmin):
-    exclude = ('ipAddresses')
+    actions = [admin_decommission_ci]
 
 admin.site.register(Schema)
 admin.site.register(ConfigurationItem, ConfigurationItemAdmin)
