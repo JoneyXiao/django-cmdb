@@ -28,14 +28,17 @@ def get_parent_paths(path):
 def get_options_for_combo(string):
     ret = []
     from cmdb.models import ConfigurationItem
-    for ci in ConfigurationItem.objects.filter(active=True,
+    try:
+        for ci in ConfigurationItem.objects.filter(active=True,
             path__startswith=string):
-        short_path = ci.path[ len(string): ]
-        if not short_path:
-            pass
-        else:
-            ret.append( (ci.pk, short_path[1:] ) )
-    return ret
+            short_path = ci.path[ len(string): ]
+            if not short_path:
+                pass
+            else:
+                ret.append( (ci.pk, short_path[1:] ) )
+        return ret
+    except:
+        pass
 
 def get_correct_class(*args, **kwargs):
     if not kwargs.has_key('ci'):
