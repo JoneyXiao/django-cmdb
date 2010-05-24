@@ -25,7 +25,6 @@ def view_ci(request, ci_path):
     if ci:
         return render_to_response(schema.view_template, {'ci': ci }, context_instance=RequestContext(request))
     else:
-        return Http404()
         handle_404_error(ci_path)
 
 
@@ -44,7 +43,7 @@ def decommission_ci(request, *args, **kwargs):
     logging.debug('''Decommissioned CI: %s''' % ci.path)
 
 def handle_404_error(ci_path):
-    return Http404()
+    raise Http404()
 
     
     
