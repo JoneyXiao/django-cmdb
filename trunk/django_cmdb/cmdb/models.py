@@ -41,6 +41,8 @@ class ConfigurationItem(models.Model):
     extension_attribute_9 = models.CharField('Extension Attribute 9',max_length=255, blank=True)
     extension_attribute_10 = models.CharField('Extension Attribute 10',max_length=255, blank=True)
     extension_attribute_11 = models.BooleanField()
+    explicit_acl = models.TextField('Explicit Access Control List', blank=True)
+
       
     def __unicode__(self):
         return u'''%s''' % self.path
