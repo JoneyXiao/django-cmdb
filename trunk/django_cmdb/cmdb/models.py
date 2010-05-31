@@ -176,7 +176,7 @@ class Device(ConfigurationItem):
     machine_type = models.CharField('Machine Type', max_length=255, blank=True)
     company = models.ForeignKey(Company, verbose_name='Company',
             related_name="devices_in_company")
-    ip_addresses = models.CharField('IP Address', max_length=1024, blank=True)
+    ip_addresses = models.TextField('IP Address', blank=True)
     purchase_date = models.DateField('Purchase Date', blank=True, null=True)
     warranty_expire = models.DateField('Warranty Expire', blank=True, null=True)
     url = models.URLField('URL', blank=True)
