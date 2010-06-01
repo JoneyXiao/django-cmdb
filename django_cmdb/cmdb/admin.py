@@ -1,4 +1,5 @@
 from cmdb.models import *
+from cmdb.forms import *
 from cmdb.views import decommission_ci
 from django.contrib import admin
 from django.contrib.auth.models import User
@@ -15,6 +16,7 @@ class ConfigurationItemAdmin(admin.ModelAdmin):
     actions = [admin_decommission_ci]
 
 class DeviceAdmin(admin.ModelAdmin):
+    form = DeviceForm
     list_display = ['path', 'company', 'active', 'description']
     search_fields = ['path', 'serial_number', 'asset_tag']
     actions = [admin_decommission_ci]
