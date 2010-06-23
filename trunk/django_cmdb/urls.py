@@ -1,4 +1,6 @@
 from django.conf.urls.defaults import *
+from django.contrib.auth.views import *
+from django.views.generic.simple import direct_to_template
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
@@ -14,6 +16,10 @@ urlpatterns = patterns('',
 
     # Uncomment the next line to enable the admin:
     (r'^admin/', include(admin.site.urls)),
+	(r'^accounts/login/', login, {'template_name': 'login.html'}),
+	(r'^accounts/logout/', logout, {'template_name': 'logout.html'}),
+    (r'^CMDB/', include('cmdb.urls')),
 
     (r'^(?P<ci_path>[-\w\./\s]+)$', 'cmdb.views.view_ci'),
+    (r'', direct_to_template, {'template': 'cmdb/home.html'}),
 )

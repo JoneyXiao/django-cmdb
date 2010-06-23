@@ -9,8 +9,8 @@ from django.http import HttpResponse, HttpResponseRedirect, Http404
 from misc.cmdb_lib import get_parent_paths, get_correct_class, \
     get_schema_for_ci, prefix_slash
 from cmdb.models import *
+from cmdb.forms import *
 
-@login_required
 def view_ci(request, ci_path):
 
     as_json = request.POST.get('as_json')
@@ -23,10 +23,23 @@ def view_ci(request, ci_path):
         ci = False
 
     if ci:
-        return render_to_response(schema.view_template, {'ci': ci }, context_instance=RequestContext(request))
+        return render_to_response(schema.view_template, locals(), context_instance=RequestContext(request))
     else:
         handle_404_error(ci_path)
 
+def add_ci(request):
+
+    if request.method == 'GET':
+        ci_path = request.GET.get('path')
+        logging.debug('''Adding CI under %s''' % ci_path)
+        schema = get_schema_for_ci(ci_path=ci_path)
+        form = eval(schema.form_name)()
+        return render_to_response(schema.add_template, locals(), context_instance=RequestContext(request))
+
+
+    if request.method == 'POST':
+        # Add object
+        pass
 
 
 @login_required
