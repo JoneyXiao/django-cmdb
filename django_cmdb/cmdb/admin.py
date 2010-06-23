@@ -11,13 +11,13 @@ def admin_decommission_ci(modeladmin, request, queryset):
 admin_decommission_ci.short_description = 'Decommission CI'
 
 class ConfigurationItemAdmin(admin.ModelAdmin):
-    list_display = ['path', 'name', 'active', 'description']
+    list_display = ['path', 'name', 'is_active', 'description']
     search_fields = ['path']
     actions = [admin_decommission_ci]
 
 class DeviceAdmin(admin.ModelAdmin):
     form = DeviceForm
-    list_display = ['path', 'company', 'active', 'description']
+    list_display = ['path', 'company', 'is_active', 'description']
     search_fields = ['path', 'serial_number', 'asset_tag']
     actions = [admin_decommission_ci]
 	

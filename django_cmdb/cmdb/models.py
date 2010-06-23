@@ -26,7 +26,7 @@ class ConfigurationItem(models.Model):
     path = models.CharField('Path', max_length=1024)
     name = models.CharField('Name', max_length=1024, blank=True)
     description = models.CharField('Description', max_length=1024, blank=True)
-    active = models.BooleanField('Active', default=True)
+    is_active = models.BooleanField('Active', default=True)
     is_leaf = models.BooleanField('Is a Leaf item', default=True)
     date_created = models.DateTimeField('Date Created', auto_now_add=True)
     date_modified = models.DateTimeField('Date Modified', auto_now=True)
@@ -171,8 +171,8 @@ class Device(ConfigurationItem):
     serial_number = models.CharField('Serial Number', max_length=255, blank=True)
     location = models.ForeignKey(Location, verbose_name='Location',
             related_name="devices_in_location")
-    model = models.ForeignKey(Model, verbose_name='Model',
-            related_name="devices_of_type")
+    model = models.ForeignKey(Model, verbose_name='Model', blank=True,
+            null=True, related_name="devices_of_type")
     machine_type = models.CharField('Machine Type', max_length=255, blank=True)
     company = models.ForeignKey(Company, verbose_name='Company',
             related_name="devices_in_company")
@@ -206,20 +206,17 @@ class OperatingSystem(ConfigurationItem):
 class Server(Device):
 
     operating_system = models.ForeignKey(OperatingSystem,
-            verbose_name='Operating System',
-            choices=get_options_for_combo('/OperatingSystem'))
+            verbose_name='Operating System', blank=True, null=True,
+            related_name='servers_with_os')
     authentication_source = models.ForeignKey(ConfigurationItem,
-            verbose_name='Authentication Source',
-            related_name='servers_in_authentication_source',
-            choices=get_options_for_combo('/AuthenticationSource'))
+            verbose_name='Authentication Source', blank=True, null=True,
+            related_name='servers_in_authentication_source')
     patching_system = models.ForeignKey(ConfigurationItem,
-            verbose_name='Patching System',
-            related_name='servers_in_patching_system',
-            choices=get_options_for_combo('/PatchingSystem'))
+            verbose_name='Patching System', blank=True, null=True,
+            related_name='servers_in_patching_system')
     backup_system = models.ForeignKey(ConfigurationItem, 
-            verbose_name='Backup System',
-            related_name='servers_in_backup_system',
-            choices=get_options_for_combo('/BackupSystem'))
+            verbose_name='Backup System', blank=True, null=True,
+            related_name='servers_in_backup_system')
 
 class People(ConfigurationItem):
 
