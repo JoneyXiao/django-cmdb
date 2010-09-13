@@ -27,7 +27,7 @@ class ConfigurationItem(models.Model):
     name = models.CharField('Name', max_length=1024, blank=True)
     description = models.CharField('Description', max_length=1024, blank=True)
     is_active = models.BooleanField('Active', default=True)
-    is_leaf = models.BooleanField('Is a Leaf item', default=True)
+    is_container = models.BooleanField('Is a Container Object', default=False)
     date_created = models.DateTimeField('Date Created', auto_now_add=True)
     date_modified = models.DateTimeField('Date Modified', auto_now=True)
     extension_attribute_1 = models.CharField('Extension Attribute 1', max_length=255, blank=True)
