@@ -1,5 +1,5 @@
 #summary Proposed REST API Interface
 
 || URI || GET || PUT || POST || DELETE ||
-|| ??? || Returns a list of all Device Classes || Not Implemented || Adds a new Device Class || Not Implemented ||
+|| /DeviceClasses || Returns a list of all Device Classes || Not Implemented || Not Implemented || Not Implemented ||
 || /Random/CMDB/Path || Returns list of all objects in this device class,or the single object if there is only one || Updates the CMDB object || Adds a new device in this class if POSTing to a container|| Delete (actually decommission) the object, not valid if done on a container || 
