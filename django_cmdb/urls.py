@@ -19,6 +19,7 @@ urlpatterns = patterns('',
 	(r'^accounts/login/', login, {'template_name': 'login.html'}),
 	(r'^accounts/logout/', logout, {'template_name': 'logout.html'}),
     (r'^CMDB/', include('cmdb.urls')),
+    (r'^api/', include('api.urls')),
 
     (r'^(?P<ci_path>[-\w\./\s]+)$', 'cmdb.views.view_ci'),
     (r'', direct_to_template, {'template': 'cmdb/home.html'}),
