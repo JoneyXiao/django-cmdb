@@ -4,7 +4,7 @@ from django.contrib.auth.models import Group, User
 from django.utils.http import urlquote
 import logging
 
-from misc.cmdb_lib import get_options_for_combo, get_parent_paths
+from misc.cmdb_lib import get_parent_paths
 
 
 class Schema(models.Model):
