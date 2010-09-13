@@ -58,10 +58,10 @@ logging.debug('Loaded schema for /OperatingSystem')
 logging.debug('**** Loaded Initial Schema')
 
 logging.debug('**** Creating tree objects')
-ConfigurationItem(path='/', is_leaf=False).save()
+ConfigurationItem(path='/', is_container=True).save()
 logging.debug('Created /')
 
-company = Company(path='/Company', is_leaf=False)
+company = Company(path='/Company', is_container=True)
 company.save()
 logging.debug('Created /Company')
 
@@ -69,7 +69,7 @@ acme = Company(path='/Company/ACME Corp')
 acme.save()
 logging.debug('Created /Company/ACME Corp')
 
-model = Model(path='/HardwareVendor', is_leaf=False)
+model = Model(path='/HardwareVendor', is_container=True)
 model.save()
 logging.debug('Created /HardwareVendor')
 
@@ -77,7 +77,7 @@ hp = Model(path='/HardwareVendor/HP')
 hp.save()
 logging.debug('Created /HardwareVendor/HP')
 
-location = Location(path='/Locations', is_leaf=False)
+location = Location(path='/Locations', is_container=True)
 location.save()
 logging.debug('Created /Locations')
 
@@ -85,28 +85,27 @@ london = Location(path='/Locations/London')
 london.save()
 logging.debug('Created /Locations/London')
 
-Device(path='/Devices', location=location, model=model, company=company,
-        is_leaf=False).save()
+Device(path='/Devices', location=location, model=model, company=company, is_container=True).save()
 logging.debug('Created /Devices')
 
 Device(path='/Devices/ROUTER01', company=acme, model=hp, location=london).save()
 logging.debug('Created /Devices/ROUTER01')
 
-OperatingSystem(path='/OperatingSystem', is_leaf=False).save()
+OperatingSystem(path='/OperatingSystem', is_container=True).save()
 logging.debug('Created /OperatingSystem')
 
 linux = OperatingSystem(path='/OperatingSystem/Linux')
 linux.save()
 logging.debug('Created /OperatingSystem/Linux')
 
-ConfigurationItem(path='/PatchingSystem', is_leaf=False).save()
+ConfigurationItem(path='/PatchingSystem', is_container=True).save()
 logging.debug('Created /PatchingSystem')
 
 patching_system = ConfigurationItem(path='/PatchingSystem/Default Patching System')
 patching_system.save()
 logging.debug('Created /PatchingSystem/Default Patching System')
 
-ConfigurationItem(path='/AuthenticationSource', is_leaf=False).save()
+ConfigurationItem(path='/AuthenticationSource', is_container=True).save()
 logging.debug('Created /AuthenticationSource')
 
 auth = ConfigurationItem(path='/AuthenticationSource/Default Authentication System')
@@ -114,14 +113,14 @@ auth.save()
 logging.debug('Created /AuthenticationSource/Default Authentication Source')
 
 
-ConfigurationItem(path='/BackupSystem', is_leaf=False).save()
+ConfigurationItem(path='/BackupSystem', is_container=True).save()
 logging.debug('Created /BackupSystem')
 
 backup = ConfigurationItem(path='/BackupSystem/Default Backup System')
 backup.save()
 logging.debug('Created /BackupSystem/Default Backup System')
 
-Server(path='/Devices/Servers', company=company, location=location, is_leaf=False).save()
+Server(path='/Devices/Servers', company=company, location=location, is_container=True).save()
 logging.debug('Created /Devices/Servers')
 
 Server(path='/Devices/Servers/SERVER01', company=acme, location=london, model=hp,

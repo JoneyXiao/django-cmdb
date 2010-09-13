@@ -22,3 +22,12 @@ class ConfigurationItemHandler(BaseHandler):
         logging.debug('ci = %s' % ci)
         return ci
 
+class ContainerHandler(BaseHandler):
+
+    allowed_methods = ('GET',)
+    model = ConfigurationItem
+
+    def read(self, request):
+        return ConfigurationItem.objects.filter(is_active=True, is_container=True).exclude(path='/').order_by('path')
+
+
