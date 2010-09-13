@@ -1,4 +1,5 @@
 #summary Proposed REST API Interface
 
 || URI || GET || PUT || POST || DELETE ||
+|| ??? || Returns a list of all Device Classes || Not Implemented || Adds a new Device Class || Not Implemented ||
 || /Devices/Servers || Returns list of all objects in this device class || Not Implemented || Adds a new device in this class || Not implemented || 
