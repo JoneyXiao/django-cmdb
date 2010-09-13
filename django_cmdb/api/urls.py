@@ -1,10 +1,14 @@
+from piston.authentication import HttpBasicAuthentication
 from django.conf.urls.defaults import *
 from piston.resource import Resource
 from api.handlers import ConfigurationItemHandler, ContainerHandler
 from api.emitters import *
 
-ci_resource = Resource(ConfigurationItemHandler)
-container_resource = Resource(ContainerHandler)
+auth = HttpBasicAuthentication(realm="My Realm")
+ad = { 'authentication': auth }
+
+ci_resource = Resource(ConfigurationItemHandler, **ad)
+container_resource = Resource(ContainerHandler, **ad)
 
 urlpatterns = patterns('',
         url(r'Containers$', container_resource),
