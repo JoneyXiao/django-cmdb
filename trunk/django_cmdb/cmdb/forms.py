@@ -52,7 +52,7 @@ class DeviceForm(ModelForm):
 
     class Meta:
         model = Device
-        exclude = ('active', 'is_leaf')
+        exclude = ('active', 'is_container')
     def __init__(self, *args, **kwargs):
         super(DeviceForm, self).__init__(*args, **kwargs)
         #self.fields['path'].widget.attrs['readonly'] = True
