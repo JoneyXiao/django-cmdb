@@ -8,7 +8,7 @@ class DeviceClassNode(template.Node):
     def __init__(self, var_name='device_classes'):
         self.var_name = var_name
     def render(self, context):
-        context[self.var_name] = ConfigurationItem.objects.filter(is_active=True, is_leaf=False)
+        context[self.var_name] = ConfigurationItem.objects.filter(is_active=True, is_container=True)
         return ''
 
 @register.tag(name='get_device_classes')
