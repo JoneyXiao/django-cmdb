@@ -1,0 +1,9 @@
+#summary How Security and CI filtering works in django-cmdb
+
+= Introduction =
+
+Django-CMDB supports filtering of Configuration Items to support both security and also to make the information presented to users (i.e. You can hide CI's belonging to COMPANY_A from a user belonging to COMPANY_B)
+
+You can filter CI's under the /Devices/ namespace using the first method of Access Control (Security Groups) and you can also filter the presence of Companies, Backup Systems, Patching Systems and so on using the second method (Explicit ACLs)
+
+You must define a Security Group in order to make django-cmdb functional.
