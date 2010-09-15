@@ -139,7 +139,7 @@ anvil_user.save()
 logging.debug('Created anvil_user')
 
 acme_group = SecurityGroup(name='ACME_USERS')
-acme_group.read_acl = '''ConfigurationItem.objects.filter(company__path__icontains='ACME')'''
+acme_group.read_acl = '''filter(company__path__icontains='ACME')'''
 acme_group.save()
 logging.debug('Created ACME_USERS group')
 
@@ -148,7 +148,7 @@ acme_user.save()
 logging.debug('Added acme_user to ACME_GROUP')
 
 anvil_group = SecurityGroup(name='ANVIL_USERS')
-anvil_group.read_acl = '''ConfigurationItem.objects.filter(company__path__icontains='Anvil')'''
+anvil_group.read_acl = '''filter(company__path__icontains='Anvil')'''
 anvil_group.save()
 logging.debug('Created ANVIL_USERS group')
 
