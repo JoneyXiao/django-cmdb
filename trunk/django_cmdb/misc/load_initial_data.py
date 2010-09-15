@@ -69,6 +69,10 @@ acme = Company(path='/Company/ACME Corp')
 acme.save()
 logging.debug('Created /Company/ACME Corp')
 
+anvil = Company(path='/Company/Anvil Corp')
+anvil.save()
+logging.debug('Created /Company/Anvil Corp')
+
 model = Model(path='/HardwareVendor', is_container=True)
 model.save()
 logging.debug('Created /HardwareVendor')
@@ -112,7 +116,6 @@ auth = ConfigurationItem(path='/AuthenticationSource/Default Authentication Syst
 auth.save()
 logging.debug('Created /AuthenticationSource/Default Authentication Source')
 
-
 ConfigurationItem(path='/BackupSystem', is_container=True).save()
 logging.debug('Created /BackupSystem')
 
@@ -126,3 +129,35 @@ logging.debug('Created /Devices/Servers')
 Server(path='/Devices/Servers/SERVER01', company=acme, location=london, model=hp,
         operating_system=linux).save()
 logging.debug('Created /Devices/Servers/SERVER01')
+
+acme_user = User.objects.create_user('acme_user', 'acme_user@example.com', '1')
+acme_user.save()
+logging.debug('Created acme_user')
+
+anvil_user = User.objects.create_user('anvil_user', 'anvil_user@example.com', '1')
+anvil_user.save()
+logging.debug('Created anvil_user')
+
+acme_group = SecurityGroup(name='ACME_USERS')
+acme_group.read_acl = '''ConfigurationItem.objects.filter(company__path__icontains='ACME')'''
+acme_group.save()
+logging.debug('Created ACME_USERS group')
+
+acme_user.groups.add(acme_group)
+acme_user.save()
+logging.debug('Added acme_user to ACME_GROUP')
+
+anvil_group = SecurityGroup(name='ANVIL_USERS')
+anvil_group.read_acl = '''ConfigurationItem.objects.filter(company__path__icontains='Anvil')'''
+anvil_group.save()
+logging.debug('Created ANVIL_USERS group')
+
+anvil_user.groups.add(anvil_group)
+anvil_user.save()
+logging.debug('Added anvil_user to ANVIL_GROUP')
+
+
+
+
+
+

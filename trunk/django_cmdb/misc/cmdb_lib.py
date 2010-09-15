@@ -2,6 +2,7 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 
 
+
 def get_parent_paths(path):
     """
     Return a list of strings that represents the parent classes of a ConfigurationItem.
@@ -81,6 +82,7 @@ def get_schema_for_ci(*args, **kwargs):
     """
 
     from cmdb.models import ConfigurationItem, Schema
+    # TODO: Get some caching happening here....
     if not kwargs.has_key('ci_path'):
         ci_path = kwargs['ci'].path
     else:
@@ -129,3 +131,26 @@ def collect_all_attributes_for_schema(schema):
     return fields
 
         
+def user_allowed_to_view_ci(user, ci):
+    """
+    Return True if a user is allowed to view a CI based on it's groups ACL.
+    Return False if not
+    """
+    
+    from cmdb.models import *
+    allowed_ci_list = []
+    # TODO: Get some caching going on here to avoid expensive lookups
+    # For all of the users SecurityGroups....
+    for s in SecurityGroup.objects.filter(id__in=[ g.id for g in user.groups.all() ]):
+        for acl in s.read_acl.split('\n'):
+            # TODO: Check this string for maliciousness
+            logging.debug('''allowed_ci_list => %s''' % allowed_ci_list)
+            allowed_ci_list += [ i['id'] for i in eval('''%s.values('id')''' % acl) ]
+
+
+    logging.debug('''allowed_ci_list => %s''' % allowed_ci_list)
+    logging.debug('''ci.id => %s''' % ci.id)
+    if ci.id in allowed_ci_list:
+        return True
+    else:
+        return False
