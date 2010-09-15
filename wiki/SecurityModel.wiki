@@ -16,8 +16,15 @@ Each group has fields called *Read ACL* and *Write ACL* that can contain multipl
 
 The most permissive ACL would be _Device.objects.all()_ where you can also be very restrictive
 
-` #Only show devices that are in the London location
-Device.objects.filter(location__path__icontains='London')
-#Only show devices that are routers in Manchester
-Device.objects.filter(location__path__icontains='Manchester', path__startswith='/Devices/Router')`
+`# Only show devices that are in the London location`
+
+`Device.objects.filter(location__path__icontains='London')`
+
+`# Only show devices that are routers in Manchester`
+
+`Device.objects.filter(location__path__icontains='Manchester',path__startswith='/Devices/Router')`
+
+
+
+
 = Explicit ACL (Optional) =
