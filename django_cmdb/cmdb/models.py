@@ -139,8 +139,6 @@ class Company(ConfigurationItem):
     address = models.CharField(max_length=1024, blank=True)
     phoneNumber = models.CharField(max_length=255, blank=True)
     url = models.URLField(blank=True)
-    read_acl = models.ManyToManyField(Group, related_name='company_readACL', blank=True, default=None)
-    write_acl = models.ManyToManyField(Group, related_name='company_writeACL', blank=True, default=None)
     alert_group = models.EmailField(blank=True)
 
 class Location(ConfigurationItem):
@@ -148,8 +146,6 @@ class Location(ConfigurationItem):
     address = models.CharField(max_length=1024, blank=True)
     phoneNumber = models.CharField(max_length=255, blank=True)
     url = models.URLField(blank=True)
-    read_acl = models.ManyToManyField(Group, related_name='location_readACL', blank=True, default=None)
-    write_acl = models.ManyToManyField(Group, related_name='location_writeACL', blank=True, default=None)
     alert_group= models.EmailField(blank=True)
 
 class Model(ConfigurationItem):
@@ -304,4 +300,7 @@ class AlertProfile(models.Model):
     def __str__(self):
         return '''%s Alert Profile''' % self.user.username
 
+class SecurityGroup(Group):
 
+    read_acl = models.TextField(blank=True)
+    write_acl = models.TextField(blank=True)

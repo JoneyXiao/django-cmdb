@@ -38,6 +38,7 @@ admin.site.register(OperatingSystem)
 admin.site.register(HistoryLog)
 admin.site.register(People, DeviceAdmin)
 admin.site.register(ADImportLocation)
+admin.site.register(SecurityGroup)
 
 
 
