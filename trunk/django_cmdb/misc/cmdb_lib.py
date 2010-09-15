@@ -145,7 +145,7 @@ def user_allowed_to_view_ci(user, ci):
         for acl in s.read_acl.split('\n'):
             # TODO: Check this string for maliciousness
             logging.debug('''allowed_ci_list => %s''' % allowed_ci_list)
-            allowed_ci_list += [ i['id'] for i in eval('''%s.values('id')''' % acl) ]
+            allowed_ci_list += [ i['id'] for i in eval('''Device.objects.%s.filter(is_active=True).values('id')''' % acl) ]
 
 
     logging.debug('''allowed_ci_list => %s''' % allowed_ci_list)
