@@ -24,7 +24,8 @@ The most permissive ACL would be _Device.objects.all()_ where you can also be ve
 
 `Device.objects.filter(location__path__icontains='Manchester',path__startswith='/Devices/Router')`
 
-
-
-
 = Explicit ACL (Optional) =
+
+Device Security Groups provide a way of hiding certain Device Configuration Items from view. It might also be desirable to hide other CI's such as /Company /AuthenticationSource /BackupSystem
+
+There is no point showing these options to users if it isn't relevant to do so. For this purpose you can provide an explicit ACL. The filter() is appended to the SecurityGroup queryset
