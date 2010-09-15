@@ -7,3 +7,17 @@ Django-CMDB supports filtering of Configuration Items to support both security a
 You can filter CI's under the /Devices/ namespace using the first method of Access Control (Security Groups) and you can also filter the presence of Companies, Backup Systems, Patching Systems and so on using the second method (Explicit ACLs)
 
 You must define a Security Group in order to make django-cmdb functional.
+
+= Device Security Groups (Mandatory) =
+
+Users must be a member of a security group (created in the admin interface). A user can be a member of multiple groups.
+
+Each group has fields called *Read ACL* and *Write ACL* that can contain multiple Django query statements that define the objects user can view.
+
+The most permissive ACL would be _Device.objects.all()_ where you can also be very restrictive
+
+  * Only show devices that are in the London location
+  * _Device.objects.filter(location__path__icontains='London')_
+  * Only show devices that are routers in Manchester
+  * _Device.objects.filter(location__path__icontains='Manchester', path__startswith='/Devices/Router')_
+= Explicit ACL (Optional) =
